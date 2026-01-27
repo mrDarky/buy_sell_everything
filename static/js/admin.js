@@ -601,8 +601,20 @@ async function bulkBanUsers() {
     
     if (!confirm(`Ban ${checkboxes.length} selected user(s)?`)) return;
     
+    const token = localStorage.getItem('access_token');
     for (const checkbox of checkboxes) {
-        await toggleUserActive(parseInt(checkbox.value));
+        const userId = parseInt(checkbox.value);
+        // Check if user is active before banning
+        const row = checkbox.closest('tr');
+        const statusBadge = row.querySelector('td:nth-child(6) span');
+        const isActive = statusBadge && statusBadge.textContent.trim() === 'Active';
+        
+        if (isActive) {
+            await fetch(`${API_BASE}/admin/users/${userId}/toggle-active`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+        }
     }
     loadUsers();
 }
@@ -616,8 +628,20 @@ async function bulkUnbanUsers() {
     
     if (!confirm(`Unban ${checkboxes.length} selected user(s)?`)) return;
     
+    const token = localStorage.getItem('access_token');
     for (const checkbox of checkboxes) {
-        await toggleUserActive(parseInt(checkbox.value));
+        const userId = parseInt(checkbox.value);
+        // Check if user is banned before unbanning
+        const row = checkbox.closest('tr');
+        const statusBadge = row.querySelector('td:nth-child(6) span');
+        const isBanned = statusBadge && statusBadge.textContent.trim() === 'Banned';
+        
+        if (isBanned) {
+            await fetch(`${API_BASE}/admin/users/${userId}/toggle-active`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+        }
     }
     loadUsers();
 }
@@ -693,10 +717,53 @@ async function flagActivity(activityId) {
     }
 }
 
-function filterActivities() {
+async function filterActivities() {
     const filter = document.getElementById('activity-filter').value;
-    // Reload with filter
-    loadActivities(); // In a full implementation, pass the filter parameter
+    
+    try {
+        const token = localStorage.getItem('access_token');
+        let url = `${API_BASE}/admin/activities?limit=100`;
+        
+        if (filter === 'suspicious') {
+            url += '&suspicious_only=true';
+        } else if (filter) {
+            url += `&action=${encodeURIComponent(filter)}`;
+        }
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const activities = await response.json();
+            const tbody = document.getElementById('activities-table-body');
+            tbody.innerHTML = '';
+            
+            activities.forEach(activity => {
+                const row = document.createElement('tr');
+                row.className = activity.is_suspicious ? 'table-warning' : '';
+                row.innerHTML = `
+                    <td>${activity.id}</td>
+                    <td>User #${activity.user_id}</td>
+                    <td><span class="badge bg-primary">${activity.action}</span></td>
+                    <td>${activity.description || '-'}</td>
+                    <td>${new Date(activity.created_at).toLocaleString()}</td>
+                    <td>${activity.ip_address || '-'}</td>
+                    <td>
+                        ${!activity.is_suspicious ? 
+                            `<button class="btn btn-sm btn-warning" onclick="flagActivity(${activity.id})" title="Flag as Suspicious">
+                                <i class="fas fa-flag"></i>
+                            </button>` :
+                            `<span class="badge bg-danger">Suspicious</span>`
+                        }
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    } catch (error) {
+        console.error('Error filtering activities:', error);
+    }
 }
 
 // ==================== CATEGORY MANAGEMENT FUNCTIONS ====================
