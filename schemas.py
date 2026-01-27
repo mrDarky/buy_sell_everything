@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
-from models import UserRole, ListingStatus, ListingType, AuctionStatus, TransactionStatus, DisputeStatus
+from models import UserRole, ListingStatus, ListingType, AuctionStatus, TransactionStatus, DisputeStatus, CommentStatus
 
 # User Schemas
 class UserBase(BaseModel):
@@ -241,6 +241,141 @@ class ActivityLog(ActivityLogBase):
     user_id: int
     is_suspicious: bool
     created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# Comment Schemas
+class CommentBase(BaseModel):
+    listing_id: int
+    content: str
+
+class CommentCreate(CommentBase):
+    pass
+
+class CommentUpdate(BaseModel):
+    content: Optional[str] = None
+    status: Optional[CommentStatus] = None
+
+class Comment(CommentBase):
+    id: int
+    user_id: int
+    status: CommentStatus
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# Promotion Schemas
+class PromotionBase(BaseModel):
+    listing_id: int
+    discount_percentage: float
+    start_date: datetime
+    end_date: datetime
+
+class PromotionCreate(PromotionBase):
+    pass
+
+class PromotionUpdate(BaseModel):
+    discount_percentage: Optional[float] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    is_active: Optional[bool] = None
+
+class Promotion(PromotionBase):
+    id: int
+    is_active: bool
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# Shipping Method Schemas
+class ShippingMethodBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    base_cost: float
+    estimated_days: Optional[int] = None
+
+class ShippingMethodCreate(ShippingMethodBase):
+    pass
+
+class ShippingMethodUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    base_cost: Optional[float] = None
+    estimated_days: Optional[int] = None
+    is_active: Optional[bool] = None
+
+class ShippingMethod(ShippingMethodBase):
+    id: int
+    is_active: bool
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# Site Settings Schemas
+class SiteSettingBase(BaseModel):
+    setting_key: str
+    setting_value: Optional[str] = None
+    setting_type: Optional[str] = "string"
+    description: Optional[str] = None
+
+class SiteSettingCreate(SiteSettingBase):
+    pass
+
+class SiteSettingUpdate(BaseModel):
+    setting_value: Optional[str] = None
+    description: Optional[str] = None
+
+class SiteSetting(SiteSettingBase):
+    id: int
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# Audit Log Schemas
+class AuditLogBase(BaseModel):
+    action: str
+    target_type: Optional[str] = None
+    target_id: Optional[int] = None
+    details: Optional[str] = None
+    ip_address: Optional[str] = None
+
+class AuditLogCreate(AuditLogBase):
+    admin_id: int
+
+class AuditLog(AuditLogBase):
+    id: int
+    admin_id: int
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# Support Ticket Schemas
+class SupportTicketBase(BaseModel):
+    subject: str
+    message: str
+
+class SupportTicketCreate(SupportTicketBase):
+    pass
+
+class SupportTicketUpdate(BaseModel):
+    status: Optional[str] = None
+    priority: Optional[str] = None
+    assigned_to: Optional[int] = None
+
+class SupportTicket(SupportTicketBase):
+    id: int
+    user_id: int
+    status: str
+    priority: str
+    assigned_to: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
     
     class Config:
         from_attributes = True

@@ -12,8 +12,8 @@ import os
 from database import get_db, init_db
 from models import (
     User, Listing, Auction, Bid, Message, Review, Transaction, Dispute, Payment,
-    Category, ActivityLog,
-    UserRole, ListingStatus, ListingType, AuctionStatus, TransactionStatus, DisputeStatus
+    Category, ActivityLog, Comment, Promotion, ShippingMethod, SiteSettings, AuditLog, SupportTicket,
+    UserRole, ListingStatus, ListingType, AuctionStatus, TransactionStatus, DisputeStatus, CommentStatus
 )
 from schemas import (
     UserCreate, UserLogin, User as UserSchema, Token,
@@ -27,6 +27,12 @@ from schemas import (
     PaymentCreate, Payment as PaymentSchema,
     CategoryCreate, CategoryUpdate, Category as CategorySchema,
     ActivityLogCreate, ActivityLog as ActivityLogSchema,
+    CommentCreate, CommentUpdate, Comment as CommentSchema,
+    PromotionCreate, PromotionUpdate, Promotion as PromotionSchema,
+    ShippingMethodCreate, ShippingMethodUpdate, ShippingMethod as ShippingMethodSchema,
+    SiteSettingCreate, SiteSettingUpdate, SiteSetting as SiteSettingSchema,
+    AuditLogCreate, AuditLog as AuditLogSchema,
+    SupportTicketCreate, SupportTicketUpdate, SupportTicket as SupportTicketSchema,
     DashboardMetrics
 )
 from auth import verify_password, get_password_hash, create_access_token, decode_access_token
@@ -95,6 +101,20 @@ def log_activity(db: Session, user_id: int, action: str, description: str = None
         ip_address=ip_address
     )
     db.add(activity)
+    db.commit()
+
+# Helper function to log audit actions
+def log_audit(db: Session, admin_id: int, action: str, target_type: str = None, target_id: int = None, details: str = None, ip_address: str = None):
+    """Log admin audit action"""
+    audit = AuditLog(
+        admin_id=admin_id,
+        action=action,
+        target_type=target_type,
+        target_id=target_id,
+        details=details,
+        ip_address=ip_address
+    )
+    db.add(audit)
     db.commit()
 
 # ==================== AUTH ROUTES ====================
@@ -838,7 +858,417 @@ def flag_activity(
     
     activity.is_suspicious = True
     db.commit()
+    
+    log_audit(db, current_user.id, "Flagged Activity", "activity_log", activity_id, f"Flagged activity log #{activity_id}")
+    
     return {"detail": "Activity flagged as suspicious"}
+
+# ==================== COMMENTS & REVIEWS ROUTES ====================
+
+@app.get("/api/admin/comments", response_model=List[CommentSchema])
+def get_all_comments(
+    skip: int = 0,
+    limit: int = 100,
+    status: Optional[CommentStatus] = None,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Comment)
+    if status:
+        query = query.filter(Comment.status == status)
+    return query.order_by(Comment.created_at.desc()).offset(skip).limit(limit).all()
+
+@app.get("/api/comments/listing/{listing_id}", response_model=List[CommentSchema])
+def get_listing_comments(listing_id: int, db: Session = Depends(get_db)):
+    comments = db.query(Comment).filter(
+        Comment.listing_id == listing_id,
+        Comment.status == CommentStatus.APPROVED
+    ).order_by(Comment.created_at.desc()).all()
+    return comments
+
+@app.post("/api/comments", response_model=CommentSchema)
+def create_comment(
+    comment: CommentCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    db_comment = Comment(**comment.dict(), user_id=current_user.id)
+    db.add(db_comment)
+    db.commit()
+    db.refresh(db_comment)
+    return db_comment
+
+@app.put("/api/admin/comments/{comment_id}/approve")
+def approve_comment(
+    comment_id: int,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    comment = db.query(Comment).filter(Comment.id == comment_id).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
+    comment.status = CommentStatus.APPROVED
+    db.commit()
+    
+    log_audit(db, current_user.id, "Approved Comment", "comment", comment_id)
+    
+    return {"detail": "Comment approved"}
+
+@app.delete("/api/admin/comments/{comment_id}")
+def delete_comment(
+    comment_id: int,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    comment = db.query(Comment).filter(Comment.id == comment_id).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
+    db.delete(comment)
+    db.commit()
+    
+    log_audit(db, current_user.id, "Deleted Comment", "comment", comment_id)
+    
+    return {"detail": "Comment deleted"}
+
+# ==================== PROMOTIONS ROUTES ====================
+
+@app.get("/api/admin/promotions", response_model=List[PromotionSchema])
+def get_all_promotions(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    promotions = db.query(Promotion).offset(skip).limit(limit).all()
+    return promotions
+
+@app.post("/api/admin/promotions", response_model=PromotionSchema)
+def create_promotion(
+    promotion: PromotionCreate,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    db_promotion = Promotion(**promotion.dict())
+    db.add(db_promotion)
+    db.commit()
+    db.refresh(db_promotion)
+    
+    log_audit(db, current_user.id, "Created Promotion", "promotion", db_promotion.id)
+    
+    return db_promotion
+
+@app.put("/api/admin/promotions/{promotion_id}", response_model=PromotionSchema)
+def update_promotion(
+    promotion_id: int,
+    promotion_update: PromotionUpdate,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    db_promotion = db.query(Promotion).filter(Promotion.id == promotion_id).first()
+    if not db_promotion:
+        raise HTTPException(status_code=404, detail="Promotion not found")
+    
+    for key, value in promotion_update.dict(exclude_unset=True).items():
+        setattr(db_promotion, key, value)
+    
+    db.commit()
+    db.refresh(db_promotion)
+    
+    log_audit(db, current_user.id, "Updated Promotion", "promotion", promotion_id)
+    
+    return db_promotion
+
+@app.delete("/api/admin/promotions/{promotion_id}")
+def delete_promotion(
+    promotion_id: int,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    promotion = db.query(Promotion).filter(Promotion.id == promotion_id).first()
+    if not promotion:
+        raise HTTPException(status_code=404, detail="Promotion not found")
+    
+    db.delete(promotion)
+    db.commit()
+    
+    log_audit(db, current_user.id, "Deleted Promotion", "promotion", promotion_id)
+    
+    return {"detail": "Promotion deleted"}
+
+# ==================== SHIPPING METHODS ROUTES ====================
+
+@app.get("/api/shipping-methods", response_model=List[ShippingMethodSchema])
+def get_shipping_methods(db: Session = Depends(get_db)):
+    methods = db.query(ShippingMethod).filter(ShippingMethod.is_active == True).all()
+    return methods
+
+@app.get("/api/admin/shipping-methods", response_model=List[ShippingMethodSchema])
+def get_all_shipping_methods(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    methods = db.query(ShippingMethod).offset(skip).limit(limit).all()
+    return methods
+
+@app.post("/api/admin/shipping-methods", response_model=ShippingMethodSchema)
+def create_shipping_method(
+    method: ShippingMethodCreate,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    db_method = ShippingMethod(**method.dict())
+    db.add(db_method)
+    db.commit()
+    db.refresh(db_method)
+    
+    log_audit(db, current_user.id, "Created Shipping Method", "shipping_method", db_method.id)
+    
+    return db_method
+
+@app.put("/api/admin/shipping-methods/{method_id}", response_model=ShippingMethodSchema)
+def update_shipping_method(
+    method_id: int,
+    method_update: ShippingMethodUpdate,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    db_method = db.query(ShippingMethod).filter(ShippingMethod.id == method_id).first()
+    if not db_method:
+        raise HTTPException(status_code=404, detail="Shipping method not found")
+    
+    for key, value in method_update.dict(exclude_unset=True).items():
+        setattr(db_method, key, value)
+    
+    db.commit()
+    db.refresh(db_method)
+    
+    log_audit(db, current_user.id, "Updated Shipping Method", "shipping_method", method_id)
+    
+    return db_method
+
+@app.delete("/api/admin/shipping-methods/{method_id}")
+def delete_shipping_method(
+    method_id: int,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    method = db.query(ShippingMethod).filter(ShippingMethod.id == method_id).first()
+    if not method:
+        raise HTTPException(status_code=404, detail="Shipping method not found")
+    
+    db.delete(method)
+    db.commit()
+    
+    log_audit(db, current_user.id, "Deleted Shipping Method", "shipping_method", method_id)
+    
+    return {"detail": "Shipping method deleted"}
+
+# ==================== SITE SETTINGS ROUTES ====================
+
+@app.get("/api/admin/settings", response_model=List[SiteSettingSchema])
+def get_all_settings(
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    settings = db.query(SiteSettings).all()
+    return settings
+
+@app.get("/api/admin/settings/{setting_key}", response_model=SiteSettingSchema)
+def get_setting(
+    setting_key: str,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    setting = db.query(SiteSettings).filter(SiteSettings.setting_key == setting_key).first()
+    if not setting:
+        raise HTTPException(status_code=404, detail="Setting not found")
+    return setting
+
+@app.post("/api/admin/settings", response_model=SiteSettingSchema)
+def create_setting(
+    setting: SiteSettingCreate,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    existing = db.query(SiteSettings).filter(SiteSettings.setting_key == setting.setting_key).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Setting already exists")
+    
+    db_setting = SiteSettings(**setting.dict())
+    db.add(db_setting)
+    db.commit()
+    db.refresh(db_setting)
+    
+    log_audit(db, current_user.id, "Created Setting", "site_setting", db_setting.id, f"Key: {setting.setting_key}")
+    
+    return db_setting
+
+@app.put("/api/admin/settings/{setting_key}", response_model=SiteSettingSchema)
+def update_setting(
+    setting_key: str,
+    setting_update: SiteSettingUpdate,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    db_setting = db.query(SiteSettings).filter(SiteSettings.setting_key == setting_key).first()
+    if not db_setting:
+        raise HTTPException(status_code=404, detail="Setting not found")
+    
+    for key, value in setting_update.dict(exclude_unset=True).items():
+        setattr(db_setting, key, value)
+    
+    db.commit()
+    db.refresh(db_setting)
+    
+    log_audit(db, current_user.id, "Updated Setting", "site_setting", db_setting.id, f"Key: {setting_key}")
+    
+    return db_setting
+
+# ==================== AUDIT LOGS ROUTES ====================
+
+@app.get("/api/admin/audit-logs", response_model=List[AuditLogSchema])
+def get_audit_logs(
+    skip: int = 0,
+    limit: int = 100,
+    admin_id: Optional[int] = None,
+    target_type: Optional[str] = None,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    query = db.query(AuditLog)
+    
+    if admin_id:
+        query = query.filter(AuditLog.admin_id == admin_id)
+    if target_type:
+        query = query.filter(AuditLog.target_type == target_type)
+    
+    return query.order_by(AuditLog.created_at.desc()).offset(skip).limit(limit).all()
+
+# ==================== SUPPORT TICKETS ROUTES ====================
+
+@app.get("/api/admin/support-tickets", response_model=List[SupportTicketSchema])
+def get_all_support_tickets(
+    skip: int = 0,
+    limit: int = 100,
+    status: Optional[str] = None,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    query = db.query(SupportTicket)
+    if status:
+        query = query.filter(SupportTicket.status == status)
+    return query.order_by(SupportTicket.created_at.desc()).offset(skip).limit(limit).all()
+
+@app.get("/api/support-tickets/my", response_model=List[SupportTicketSchema])
+def get_my_support_tickets(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    tickets = db.query(SupportTicket).filter(SupportTicket.user_id == current_user.id).order_by(SupportTicket.created_at.desc()).all()
+    return tickets
+
+@app.post("/api/support-tickets", response_model=SupportTicketSchema)
+def create_support_ticket(
+    ticket: SupportTicketCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    db_ticket = SupportTicket(**ticket.dict(), user_id=current_user.id)
+    db.add(db_ticket)
+    db.commit()
+    db.refresh(db_ticket)
+    return db_ticket
+
+@app.put("/api/admin/support-tickets/{ticket_id}", response_model=SupportTicketSchema)
+def update_support_ticket(
+    ticket_id: int,
+    ticket_update: SupportTicketUpdate,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    db_ticket = db.query(SupportTicket).filter(SupportTicket.id == ticket_id).first()
+    if not db_ticket:
+        raise HTTPException(status_code=404, detail="Support ticket not found")
+    
+    for key, value in ticket_update.dict(exclude_unset=True).items():
+        setattr(db_ticket, key, value)
+    
+    db.commit()
+    db.refresh(db_ticket)
+    
+    log_audit(db, current_user.id, "Updated Support Ticket", "support_ticket", ticket_id)
+    
+    return db_ticket
+
+# ==================== REPORTS & ANALYTICS ROUTES ====================
+
+@app.get("/api/admin/reports/sales")
+def get_sales_report(
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Transaction).filter(Transaction.status == TransactionStatus.COMPLETED)
+    
+    if start_date:
+        query = query.filter(Transaction.completed_at >= start_date)
+    if end_date:
+        query = query.filter(Transaction.completed_at <= end_date)
+    
+    transactions = query.all()
+    
+    total_revenue = sum(t.amount for t in transactions)
+    transaction_count = len(transactions)
+    
+    # Category breakdown
+    category_sales = {}
+    for transaction in transactions:
+        listing = db.query(Listing).filter(Listing.id == transaction.listing_id).first()
+        if listing:
+            category = listing.category
+            if category not in category_sales:
+                category_sales[category] = 0
+            category_sales[category] += transaction.amount
+    
+    return {
+        "total_revenue": total_revenue,
+        "transaction_count": transaction_count,
+        "category_breakdown": category_sales,
+        "start_date": start_date,
+        "end_date": end_date
+    }
+
+@app.get("/api/admin/reports/users")
+def get_user_report(
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    total_users = db.query(func.count(User.id)).scalar()
+    active_users = db.query(func.count(User.id)).filter(User.is_active == True).scalar()
+    verified_users = db.query(func.count(User.id)).filter(User.is_verified == True).scalar()
+    
+    # User growth (last 30 days)
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    new_users = db.query(func.count(User.id)).filter(User.created_at >= thirty_days_ago).scalar()
+    
+    # Role breakdown
+    role_breakdown = {}
+    for role in UserRole:
+        count = db.query(func.count(User.id)).filter(User.role == role).scalar()
+        role_breakdown[role.value] = count
+    
+    return {
+        "total_users": total_users,
+        "active_users": active_users,
+        "verified_users": verified_users,
+        "new_users_last_30_days": new_users,
+        "role_breakdown": role_breakdown
+    }
 
 # ==================== SOCKET.IO EVENTS ====================
 

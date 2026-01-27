@@ -225,3 +225,89 @@ class ActivityLog(Base):
     
     # Relationships
     user = relationship("User")
+
+class CommentStatus(str, enum.Enum):
+    APPROVED = "approved"
+    PENDING = "pending"
+    FLAGGED = "flagged"
+
+class Comment(Base):
+    __tablename__ = "comments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    listing_id = Column(Integer, ForeignKey("listings.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    status = Column(Enum(CommentStatus), default=CommentStatus.PENDING)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User")
+    listing = relationship("Listing")
+
+class Promotion(Base):
+    __tablename__ = "promotions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    listing_id = Column(Integer, ForeignKey("listings.id"), nullable=False)
+    discount_percentage = Column(Float, nullable=False)
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    listing = relationship("Listing")
+
+class ShippingMethod(Base):
+    __tablename__ = "shipping_methods"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    description = Column(Text)
+    base_cost = Column(Float, nullable=False)
+    estimated_days = Column(Integer)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class SiteSettings(Base):
+    __tablename__ = "site_settings"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    setting_key = Column(String, unique=True, nullable=False)
+    setting_value = Column(Text)
+    setting_type = Column(String)  # string, boolean, integer, json
+    description = Column(Text)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    admin_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    action = Column(String, nullable=False)
+    target_type = Column(String)  # user, listing, auction, etc.
+    target_id = Column(Integer)
+    details = Column(Text)
+    ip_address = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    admin = relationship("User")
+
+class SupportTicket(Base):
+    __tablename__ = "support_tickets"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    subject = Column(String, nullable=False)
+    message = Column(Text, nullable=False)
+    status = Column(String, default="open")  # open, in_progress, closed
+    priority = Column(String, default="normal")  # low, normal, high, urgent
+    assigned_to = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User", foreign_keys=[user_id])
+    assigned_admin = relationship("User", foreign_keys=[assigned_to])

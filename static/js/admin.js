@@ -85,6 +85,27 @@ function showSection(section) {
         case 'auctions':
             loadAuctions();
             break;
+        case 'comments':
+            loadComments();
+            break;
+        case 'promotions':
+            loadPromotions();
+            break;
+        case 'shipping':
+            loadShippingMethods();
+            break;
+        case 'settings':
+            loadSettings();
+            break;
+        case 'reports':
+            // Reports are loaded on demand
+            break;
+        case 'audit':
+            loadAuditLogs();
+            break;
+        case 'support':
+            loadSupportTickets();
+            break;
         case 'disputes':
             loadDisputes();
             break;
@@ -1007,3 +1028,399 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// ==================== COMMENTS MANAGEMENT FUNCTIONS ====================
+
+async function loadComments() {
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE}/admin/comments?limit=100`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const comments = await response.json();
+            const tbody = document.getElementById('comments-table-body');
+            tbody.innerHTML = '';
+            
+            comments.forEach(comment => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${comment.id}</td>
+                    <td>User #${comment.user_id}</td>
+                    <td>Listing #${comment.listing_id}</td>
+                    <td>${comment.content.substring(0, 50)}...</td>
+                    <td>${new Date(comment.created_at).toLocaleDateString()}</td>
+                    <td><span class="badge bg-${getCommentStatusColor(comment.status)}">${comment.status}</span></td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            ${comment.status === 'pending' ? 
+                                `<button class="btn btn-success" onclick="approveComment(${comment.id})">Approve</button>` : ''
+                            }
+                            <button class="btn btn-danger" onclick="deleteComment(${comment.id})">Delete</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading comments:', error);
+    }
+}
+
+async function approveComment(commentId) {
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE}/admin/comments/${commentId}/approve`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            loadComments();
+        }
+    } catch (error) {
+        console.error('Error approving comment:', error);
+    }
+}
+
+async function deleteComment(commentId) {
+    if (!confirm('Delete this comment?')) return;
+    
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE}/admin/comments/${commentId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            loadComments();
+        }
+    } catch (error) {
+        console.error('Error deleting comment:', error);
+    }
+}
+
+function getCommentStatusColor(status) {
+    const colors = {
+        'approved': 'success',
+        'pending': 'warning',
+        'flagged': 'danger'
+    };
+    return colors[status] || 'secondary';
+}
+
+// ==================== PROMOTIONS MANAGEMENT FUNCTIONS ====================
+
+async function loadPromotions() {
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE}/admin/promotions?limit=100`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const promotions = await response.json();
+            const tbody = document.getElementById('promotions-table-body');
+            tbody.innerHTML = '';
+            
+            promotions.forEach(promo => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${promo.id}</td>
+                    <td>Listing #${promo.listing_id}</td>
+                    <td>${promo.discount_percentage}%</td>
+                    <td>${new Date(promo.start_date).toLocaleDateString()}</td>
+                    <td>${new Date(promo.end_date).toLocaleDateString()}</td>
+                    <td><span class="badge bg-${promo.is_active ? 'success' : 'secondary'}">${promo.is_active ? 'Active' : 'Inactive'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deletePromotion(${promo.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading promotions:', error);
+    }
+}
+
+async function deletePromotion(promoId) {
+    if (!confirm('Delete this promotion?')) return;
+    
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE}/admin/promotions/${promoId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            loadPromotions();
+        }
+    } catch (error) {
+        console.error('Error deleting promotion:', error);
+    }
+}
+
+function showAddPromotionModal() {
+    alert('Add Promotion functionality - to be implemented with a proper form');
+}
+
+// ==================== SHIPPING METHODS FUNCTIONS ====================
+
+async function loadShippingMethods() {
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE}/admin/shipping-methods?limit=100`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const methods = await response.json();
+            const tbody = document.getElementById('shipping-table-body');
+            tbody.innerHTML = '';
+            
+            methods.forEach(method => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${method.id}</td>
+                    <td>${method.name}</td>
+                    <td>${method.description || '-'}</td>
+                    <td>$${method.base_cost}</td>
+                    <td>${method.estimated_days || '-'} days</td>
+                    <td><span class="badge bg-${method.is_active ? 'success' : 'secondary'}">${method.is_active ? 'Active' : 'Inactive'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteShippingMethod(${method.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading shipping methods:', error);
+    }
+}
+
+async function deleteShippingMethod(methodId) {
+    if (!confirm('Delete this shipping method?')) return;
+    
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE}/admin/shipping-methods/${methodId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            loadShippingMethods();
+        }
+    } catch (error) {
+        console.error('Error deleting shipping method:', error);
+    }
+}
+
+function showAddShippingModal() {
+    alert('Add Shipping Method functionality - to be implemented with a proper form');
+}
+
+// ==================== SETTINGS FUNCTIONS ====================
+
+async function loadSettings() {
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE}/admin/settings`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const settings = await response.json();
+            const tbody = document.getElementById('settings-table-body');
+            tbody.innerHTML = '';
+            
+            settings.forEach(setting => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${setting.setting_key}</td>
+                    <td>${setting.setting_value || '-'}</td>
+                    <td>${setting.setting_type}</td>
+                    <td>${setting.description || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editSetting('${setting.setting_key}')">Edit</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+function showAddSettingModal() {
+    alert('Add Setting functionality - to be implemented with a proper form');
+}
+
+function editSetting(key) {
+    alert(`Edit setting ${key} - to be implemented with a proper form`);
+}
+
+// ==================== REPORTS FUNCTIONS ====================
+
+async function loadSalesReport() {
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE}/admin/reports/sales`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const report = await response.json();
+            const container = document.getElementById('sales-report');
+            container.innerHTML = `
+                <p><strong>Total Revenue:</strong> $${report.total_revenue.toFixed(2)}</p>
+                <p><strong>Transaction Count:</strong> ${report.transaction_count}</p>
+                <p><strong>Category Breakdown:</strong></p>
+                <ul>
+                    ${Object.entries(report.category_breakdown).map(([cat, amount]) => 
+                        `<li>${cat}: $${amount.toFixed(2)}</li>`
+                    ).join('')}
+                </ul>
+                <button class="btn btn-secondary" onclick="exportSalesReport()">Export to CSV</button>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading sales report:', error);
+    }
+}
+
+async function loadUserReport() {
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE}/admin/reports/users`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const report = await response.json();
+            const container = document.getElementById('user-report');
+            container.innerHTML = `
+                <p><strong>Total Users:</strong> ${report.total_users}</p>
+                <p><strong>Active Users:</strong> ${report.active_users}</p>
+                <p><strong>Verified Users:</strong> ${report.verified_users}</p>
+                <p><strong>New Users (Last 30 Days):</strong> ${report.new_users_last_30_days}</p>
+                <p><strong>Role Breakdown:</strong></p>
+                <ul>
+                    ${Object.entries(report.role_breakdown).map(([role, count]) => 
+                        `<li>${role}: ${count}</li>`
+                    ).join('')}
+                </ul>
+                <button class="btn btn-secondary" onclick="exportUserReport()">Export to CSV</button>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading user report:', error);
+    }
+}
+
+function exportSalesReport() {
+    alert('Export functionality - to be implemented');
+}
+
+function exportUserReport() {
+    alert('Export functionality - to be implemented');
+}
+
+// ==================== AUDIT LOGS FUNCTIONS ====================
+
+async function loadAuditLogs() {
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE}/admin/audit-logs?limit=100`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const logs = await response.json();
+            const tbody = document.getElementById('audit-table-body');
+            tbody.innerHTML = '';
+            
+            logs.forEach(log => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${log.id}</td>
+                    <td>Admin #${log.admin_id}</td>
+                    <td><span class="badge bg-info">${log.action}</span></td>
+                    <td>${log.target_type || '-'}</td>
+                    <td>${log.target_id || '-'}</td>
+                    <td>${log.details || '-'}</td>
+                    <td>${new Date(log.created_at).toLocaleString()}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading audit logs:', error);
+    }
+}
+
+// ==================== SUPPORT TICKETS FUNCTIONS ====================
+
+async function loadSupportTickets() {
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_BASE}/admin/support-tickets?limit=100`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const tickets = await response.json();
+            const tbody = document.getElementById('support-table-body');
+            tbody.innerHTML = '';
+            
+            tickets.forEach(ticket => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${ticket.id}</td>
+                    <td>User #${ticket.user_id}</td>
+                    <td>${ticket.subject}</td>
+                    <td><span class="badge bg-${getTicketStatusColor(ticket.status)}">${ticket.status}</span></td>
+                    <td><span class="badge bg-${getPriorityColor(ticket.priority)}">${ticket.priority}</span></td>
+                    <td>${ticket.assigned_to ? `Admin #${ticket.assigned_to}` : 'Unassigned'}</td>
+                    <td>${new Date(ticket.created_at).toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewTicket(${ticket.id})">View</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading support tickets:', error);
+    }
+}
+
+function getTicketStatusColor(status) {
+    const colors = {
+        'open': 'danger',
+        'in_progress': 'warning',
+        'closed': 'success'
+    };
+    return colors[status] || 'secondary';
+}
+
+function getPriorityColor(priority) {
+    const colors = {
+        'low': 'info',
+        'normal': 'secondary',
+        'high': 'warning',
+        'urgent': 'danger'
+    };
+    return colors[priority] || 'secondary';
+}
+
+function viewTicket(ticketId) {
+    alert(`View ticket #${ticketId} - to be implemented with a proper modal`);
+}

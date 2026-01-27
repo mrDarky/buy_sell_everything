@@ -49,6 +49,41 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link text-white" href="#comments" onclick="showSection('comments')">
+                                <i class="fas fa-comments"></i> Comments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#promotions" onclick="showSection('promotions')">
+                                <i class="fas fa-percent"></i> Promotions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#shipping" onclick="showSection('shipping')">
+                                <i class="fas fa-shipping-fast"></i> Shipping
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#settings" onclick="showSection('settings')">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#reports" onclick="showSection('reports')">
+                                <i class="fas fa-chart-bar"></i> Reports
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#audit" onclick="showSection('audit')">
+                                <i class="fas fa-clipboard-list"></i> Audit Logs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#support" onclick="showSection('support')">
+                                <i class="fas fa-life-ring"></i> Support
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link text-white" href="#disputes" onclick="showSection('disputes')">
                                 <i class="fas fa-exclamation-triangle"></i> Disputes
                             </a>
@@ -391,6 +426,217 @@
                         <i class="fas fa-robot"></i> AI Spam Detection: Placeholder for AI-powered content moderation system
                     </div>
                     <div id="flagged-content-container">
+                    </div>
+                </div>
+
+                <!-- Comments Section -->
+                <div id="comments-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Comments & Reviews Management</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadComments()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Listing</th>
+                                    <th>Comment</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comments-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Promotions Section -->
+                <div id="promotions-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Promotions & Ads</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-primary me-2" onclick="showAddPromotionModal()">
+                                <i class="fas fa-plus"></i> Add Promotion
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadPromotions()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Listing</th>
+                                    <th>Discount %</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="promotions-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Shipping Section -->
+                <div id="shipping-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Shipping & Logistics</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-primary me-2" onclick="showAddShippingModal()">
+                                <i class="fas fa-plus"></i> Add Method
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadShippingMethods()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Base Cost</th>
+                                    <th>Estimated Days</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="shipping-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="settings-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Site Configuration</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-primary me-2" onclick="showAddSettingModal()">
+                                <i class="fas fa-plus"></i> Add Setting
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadSettings()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Value</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="settings-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Reports Section -->
+                <div id="reports-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Reports & Analytics</h1>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Sales Report</h5>
+                                </div>
+                                <div class="card-body" id="sales-report">
+                                    <button class="btn btn-primary" onclick="loadSalesReport()">Generate Report</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>User Growth Report</h5>
+                                </div>
+                                <div class="card-body" id="user-report">
+                                    <button class="btn btn-primary" onclick="loadUserReport()">Generate Report</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit Logs Section -->
+                <div id="audit-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Audit Logs</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadAuditLogs()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Admin</th>
+                                    <th>Action</th>
+                                    <th>Target Type</th>
+                                    <th>Target ID</th>
+                                    <th>Details</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="audit-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Support Tickets Section -->
+                <div id="support-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Help & Support</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadSupportTickets()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Subject</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th>Assigned To</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="support-table-body">
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </main>
