@@ -2,6 +2,19 @@
 
 A comprehensive full-stack marketplace application with admin panel for buying and selling items, featuring live auctions, real-time messaging, secure transactions, and cryptocurrency payments (TON, USDT).
 
+## Screenshots
+
+### Main Site Homepage
+![Homepage](https://github.com/user-attachments/assets/fc514bfb-4959-4055-a84d-6df13c583942)
+
+The homepage features:
+- Modern gradient hero section with call-to-action buttons
+- Real-time statistics display
+- Listings grid with category filters
+- Live auctions section
+- User authentication modals
+- Responsive Bootstrap 5 design
+
 ## Tech Stack
 
 - **Backend**: Python, FastAPI, SQLAlchemy
