@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy & Sell Everything - Marketplace</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/"><i class="fas fa-shopping-cart"></i> Buy & Sell Everything</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#listings">Listings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#auctions">Auctions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#messagesModal">Messages <span class="badge bg-danger" id="unread-count">0</span></a></li>
+                    <li class="nav-item" id="auth-link">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a>
+                    </li>
+                    <li class="nav-item" id="user-menu" style="display: none;">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user"></i> <span id="username-display"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="showProfile()">Profile</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showMyListings()">My Listings</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showTransactions()">Transactions</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" onclick="logout()">Logout</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section text-white text-center py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Buy & Sell Everything</h1>
+            <p class="lead">Your trusted marketplace for buying and selling items, with live auctions and secure transactions</p>
+            <div class="mt-4">
+                <button class="btn btn-light btn-lg me-2" data-bs-toggle="modal" data-bs-target="#createListingModal">
+                    <i class="fas fa-plus"></i> Create Listing
+                </button>
+                <button class="btn btn-outline-light btn-lg" data-bs-toggle="modal" data-bs-target="#createAuctionModal">
+                    <i class="fas fa-gavel"></i> Start Auction
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-4 bg-light">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <h3 class="text-primary" id="stats-listings">0</h3>
+                    <p>Active Listings</p>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="text-primary" id="stats-auctions">0</h3>
+                    <p>Live Auctions</p>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="text-primary" id="stats-users">0</h3>
+                    <p>Users</p>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="text-primary" id="stats-transactions">0</h3>
+                    <p>Transactions</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Listings Section -->
+    <section id="listings" class="py-5">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Latest Listings</h2>
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary" onclick="filterListings('all')">All</button>
+                    <button class="btn btn-outline-primary" onclick="filterListings('Electronics')">Electronics</button>
+                    <button class="btn btn-outline-primary" onclick="filterListings('Furniture')">Furniture</button>
+                    <button class="btn btn-outline-primary" onclick="filterListings('Clothing')">Clothing</button>
+                    <button class="btn btn-outline-primary" onclick="filterListings('Other')">Other</button>
+                </div>
+            </div>
+            <div id="listings-container" class="row">
+                <!-- Listings will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Auctions Section -->
+    <section id="auctions" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Live Auctions</h2>
+            <div id="auctions-container" class="row">
+                <!-- Auctions will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Login / Register</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs mb-3" id="authTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button">Login</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button">Register</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="login">
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" name="email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" class="form-control" name="password" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Login</button>
+                            </form>
+                        </div>
+                        <div class="tab-pane fade" id="register">
+                            <form id="registerForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" name="email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Username</label>
+                                    <input type="text" class="form-control" name="username" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" class="form-control" name="password" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Role</label>
+                                    <select class="form-select" name="role">
+                                        <option value="buyer">Buyer</option>
+                                        <option value="seller">Seller</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Register</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Listing Modal -->
+    <div class="modal fade" id="createListingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Listing</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createListingForm">
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Price ($)</label>
+                            <input type="number" class="form-control" name="price" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" name="category" required>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Furniture">Furniture</option>
+                                <option value="Clothing">Clothing</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Image URL</label>
+                            <input type="url" class="form-control" name="image_url" placeholder="https://example.com/image.jpg">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Create Listing</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Auction Modal -->
+    <div class="modal fade" id="createAuctionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Start New Auction</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createAuctionForm">
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Starting Price ($)</label>
+                            <input type="number" class="form-control" name="starting_price" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Reserve Price ($)</label>
+                            <input type="number" class="form-control" name="reserve_price" step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" name="category" required>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Furniture">Furniture</option>
+                                <option value="Clothing">Clothing</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">End Time</label>
+                            <input type="datetime-local" class="form-control" name="end_time" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Image URL</label>
+                            <input type="url" class="form-control" name="image_url">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Start Auction</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages Modal -->
+    <div class="modal fade" id="messagesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Messages</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="messages-container" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Messages will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listing Detail Modal -->
+    <div class="modal fade" id="listingDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="listing-detail-title"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="listing-detail-body">
+                    <!-- Listing details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="buy-now-btn">Buy Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p>&copy; 2026 Buy & Sell Everything. All rights reserved.</p>
+            <p>
+                <a href="/admin" class="text-white">Admin Panel</a> | 
+                <a href="#" class="text-white">Terms</a> | 
+                <a href="#" class="text-white">Privacy</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
