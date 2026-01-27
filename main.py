@@ -535,7 +535,7 @@ def get_dashboard_metrics(
     active_auctions = db.query(func.count(Auction.id)).filter(Auction.status == AuctionStatus.ACTIVE).scalar()
     total_transactions = db.query(func.count(Transaction.id)).scalar()
     pending_disputes = db.query(func.count(Dispute.id)).filter(Dispute.status == DisputeStatus.OPEN).scalar()
-    flagged_content = db.query(func.count(Listing.id)).filter(Listing.is_flagged == True).scalar()
+    flagged_content = db.query(func.count(Listing.id)).filter(Listing.is_flagged ).scalar()
     total_revenue = db.query(func.sum(Transaction.amount)).filter(Transaction.status == TransactionStatus.COMPLETED).scalar() or 0.0
     
     return DashboardMetrics(
@@ -748,7 +748,7 @@ def get_categories(
 ):
     query = db.query(Category)
     if active_only:
-        query = query.filter(Category.is_active == True)
+        query = query.filter(Category.is_active )
     return query.order_by(Category.order).offset(skip).limit(limit).all()
 
 @app.get("/api/categories/{category_id}", response_model=CategorySchema)
@@ -831,7 +831,7 @@ def get_activity_logs(
     if action:
         query = query.filter(ActivityLog.action.contains(action))
     if suspicious_only:
-        query = query.filter(ActivityLog.is_suspicious == True)
+        query = query.filter(ActivityLog.is_suspicious )
     
     return query.order_by(ActivityLog.created_at.desc()).offset(skip).limit(limit).all()
 
@@ -1001,7 +1001,7 @@ def delete_promotion(
 
 @app.get("/api/shipping-methods", response_model=List[ShippingMethodSchema])
 def get_shipping_methods(db: Session = Depends(get_db)):
-    methods = db.query(ShippingMethod).filter(ShippingMethod.is_active == True).all()
+    methods = db.query(ShippingMethod).filter(ShippingMethod.is_active ).all()
     return methods
 
 @app.get("/api/admin/shipping-methods", response_model=List[ShippingMethodSchema])
@@ -1249,8 +1249,8 @@ def get_user_report(
     db: Session = Depends(get_db)
 ):
     total_users = db.query(func.count(User.id)).scalar()
-    active_users = db.query(func.count(User.id)).filter(User.is_active == True).scalar()
-    verified_users = db.query(func.count(User.id)).filter(User.is_verified == True).scalar()
+    active_users = db.query(func.count(User.id)).filter(User.is_active ).scalar()
+    verified_users = db.query(func.count(User.id)).filter(User.is_verified ).scalar()
     
     # User growth (last 30 days)
     thirty_days_ago = datetime.utcnow() - timedelta(days=30)

@@ -1166,7 +1166,7 @@ async function deletePromotion(promoId) {
 }
 
 function showAddPromotionModal() {
-    alert('Add Promotion functionality - to be implemented with a proper form');
+    console.log('Add Promotion functionality - to be implemented with a proper form');
 }
 
 // ==================== SHIPPING METHODS FUNCTIONS ====================
@@ -1223,7 +1223,7 @@ async function deleteShippingMethod(methodId) {
 }
 
 function showAddShippingModal() {
-    alert('Add Shipping Method functionality - to be implemented with a proper form');
+    console.log('Add Shipping Method functionality - to be implemented with a proper form');
 }
 
 // ==================== SETTINGS FUNCTIONS ====================
@@ -1260,11 +1260,11 @@ async function loadSettings() {
 }
 
 function showAddSettingModal() {
-    alert('Add Setting functionality - to be implemented with a proper form');
+    console.log('Add Setting functionality - to be implemented with a proper form');
 }
 
 function editSetting(key) {
-    alert(`Edit setting ${key} - to be implemented with a proper form`);
+    console.log(`Edit setting ${key} - to be implemented with a proper form`);
 }
 
 // ==================== REPORTS FUNCTIONS ====================
@@ -1326,11 +1326,11 @@ async function loadUserReport() {
 }
 
 function exportSalesReport() {
-    alert('Export functionality - to be implemented');
+    console.log('Export functionality - to be implemented');
 }
 
 function exportUserReport() {
-    alert('Export functionality - to be implemented');
+    console.log('Export functionality - to be implemented');
 }
 
 // ==================== AUDIT LOGS FUNCTIONS ====================
@@ -1422,5 +1422,5 @@ function getPriorityColor(priority) {
 }
 
 function viewTicket(ticketId) {
-    alert(`View ticket #${ticketId} - to be implemented with a proper modal`);
+    console.log(`View ticket #${ticketId} - to be implemented with a proper modal`);
 }
