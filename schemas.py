@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
-from models import UserRole, ListingStatus, AuctionStatus, TransactionStatus, DisputeStatus
+from models import UserRole, ListingStatus, ListingType, AuctionStatus, TransactionStatus, DisputeStatus
 
 # User Schemas
 class UserBase(BaseModel):
@@ -20,6 +20,7 @@ class User(UserBase):
     id: int
     is_active: bool
     is_verified: bool
+    last_login: Optional[datetime] = None
     created_at: datetime
     
     class Config:
@@ -36,6 +37,7 @@ class ListingBase(BaseModel):
     price: float
     category: str
     image_url: Optional[str] = None
+    listing_type: Optional[ListingType] = ListingType.ONE_TIME
 
 class ListingCreate(ListingBase):
     pass
@@ -47,11 +49,15 @@ class ListingUpdate(BaseModel):
     category: Optional[str] = None
     image_url: Optional[str] = None
     status: Optional[ListingStatus] = None
+    listing_type: Optional[ListingType] = None
+    is_featured: Optional[bool] = None
 
 class Listing(ListingBase):
     id: int
     seller_id: int
     status: ListingStatus
+    listing_type: ListingType
+    is_featured: bool
     views: int
     is_flagged: bool
     created_at: datetime
@@ -194,3 +200,47 @@ class DashboardMetrics(BaseModel):
     pending_disputes: int
     flagged_content: int
     total_revenue: float
+
+# Category Schemas
+class CategoryBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    parent_id: Optional[int] = None
+    is_active: Optional[bool] = True
+    order: Optional[int] = 0
+
+class CategoryCreate(CategoryBase):
+    pass
+
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    parent_id: Optional[int] = None
+    is_active: Optional[bool] = None
+    order: Optional[int] = None
+
+class Category(CategoryBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# Activity Log Schemas
+class ActivityLogBase(BaseModel):
+    action: str
+    description: Optional[str] = None
+    ip_address: Optional[str] = None
+
+class ActivityLogCreate(ActivityLogBase):
+    user_id: int
+
+class ActivityLog(ActivityLogBase):
+    id: int
+    user_id: int
+    is_suspicious: bool
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True

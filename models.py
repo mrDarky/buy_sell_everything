@@ -15,6 +15,10 @@ class ListingStatus(str, enum.Enum):
     INACTIVE = "inactive"
     FLAGGED = "flagged"
 
+class ListingType(str, enum.Enum):
+    ONE_TIME = "one-time"
+    RECURRING = "recurring"
+
 class AuctionStatus(str, enum.Enum):
     ACTIVE = "active"
     ENDED = "ended"
@@ -41,6 +45,7 @@ class User(Base):
     role = Column(Enum(UserRole), default=UserRole.BUYER)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
+    last_login = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -65,6 +70,8 @@ class Listing(Base):
     category = Column(String, nullable=False)
     image_url = Column(String)
     status = Column(Enum(ListingStatus), default=ListingStatus.ACTIVE)
+    listing_type = Column(Enum(ListingType), default=ListingType.ONE_TIME)
+    is_featured = Column(Boolean, default=False)
     seller_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     views = Column(Integer, default=0)
     is_flagged = Column(Boolean, default=False)
@@ -189,3 +196,32 @@ class Payment(Base):
     payment_type = Column(String)  # deposit, withdrawal, payout
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime)
+
+class Category(Base):
+    __tablename__ = "categories"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False, unique=True)
+    description = Column(Text)
+    parent_id = Column(Integer, ForeignKey("categories.id"))
+    is_active = Column(Boolean, default=True)
+    order = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    parent = relationship("Category", remote_side=[id], backref="subcategories")
+
+class ActivityLog(Base):
+    __tablename__ = "activity_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    action = Column(String, nullable=False)  # e.g., "Posted Listing", "Bid Placed"
+    description = Column(Text)
+    ip_address = Column(String)
+    is_suspicious = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User")

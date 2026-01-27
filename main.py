@@ -12,7 +12,8 @@ import os
 from database import get_db, init_db
 from models import (
     User, Listing, Auction, Bid, Message, Review, Transaction, Dispute, Payment,
-    UserRole, ListingStatus, AuctionStatus, TransactionStatus, DisputeStatus
+    Category, ActivityLog,
+    UserRole, ListingStatus, ListingType, AuctionStatus, TransactionStatus, DisputeStatus
 )
 from schemas import (
     UserCreate, UserLogin, User as UserSchema, Token,
@@ -24,6 +25,8 @@ from schemas import (
     TransactionCreate, Transaction as TransactionSchema,
     DisputeCreate, Dispute as DisputeSchema,
     PaymentCreate, Payment as PaymentSchema,
+    CategoryCreate, CategoryUpdate, Category as CategorySchema,
+    ActivityLogCreate, ActivityLog as ActivityLogSchema,
     DashboardMetrics
 )
 from auth import verify_password, get_password_hash, create_access_token, decode_access_token
@@ -82,6 +85,18 @@ async def require_admin(current_user: User = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
 
+# Helper function to log activities
+def log_activity(db: Session, user_id: int, action: str, description: str = None, ip_address: str = None):
+    """Log user activity"""
+    activity = ActivityLog(
+        user_id=user_id,
+        action=action,
+        description=description,
+        ip_address=ip_address
+    )
+    db.add(activity)
+    db.commit()
+
 # ==================== AUTH ROUTES ====================
 
 @app.post("/api/auth/register", response_model=Token)
@@ -116,6 +131,10 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     
     if not db_user.is_active:
         raise HTTPException(status_code=403, detail="User account is inactive")
+    
+    # Update last login timestamp
+    db_user.last_login = datetime.utcnow()
+    db.commit()
     
     access_token = create_access_token(data={"sub": str(db_user.id)})
     return {"access_token": access_token, "token_type": "bearer"}
@@ -166,6 +185,10 @@ def create_listing(
     db.add(db_listing)
     db.commit()
     db.refresh(db_listing)
+    
+    # Log activity
+    log_activity(db, current_user.id, "Posted Listing", f"Created listing: {listing.title}")
+    
     return db_listing
 
 @app.put("/api/listings/{listing_id}", response_model=ListingSchema)
@@ -278,6 +301,9 @@ async def place_bid(
     auction.current_price = bid.amount
     db.commit()
     db.refresh(db_bid)
+    
+    # Log activity
+    log_activity(db, current_user.id, "Bid Placed", f"Placed bid of ${bid.amount} on auction #{auction_id}")
     
     # Emit real-time update via Socket.IO
     await sio.emit('new_bid', {
@@ -589,6 +615,230 @@ def get_all_payments(
 ):
     payments = db.query(Payment).offset(skip).limit(limit).all()
     return payments
+
+# ==================== ADMIN USER MANAGEMENT ROUTES ====================
+
+@app.get("/api/admin/users/{user_id}", response_model=UserSchema)
+def get_user_details(
+    user_id: int,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+@app.put("/api/admin/users/{user_id}", response_model=UserSchema)
+def update_user(
+    user_id: int,
+    email: Optional[str] = None,
+    username: Optional[str] = None,
+    role: Optional[UserRole] = None,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if email:
+        user.email = email
+    if username:
+        user.username = username
+    if role:
+        user.role = role
+    
+    db.commit()
+    db.refresh(user)
+    return user
+
+@app.delete("/api/admin/users/{user_id}")
+def delete_user(
+    user_id: int,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.role == UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Cannot delete admin users")
+    
+    db.delete(user)
+    db.commit()
+    return {"detail": "User deleted"}
+
+# ==================== ADMIN LISTING MANAGEMENT ROUTES ====================
+
+@app.put("/api/admin/listings/{listing_id}/feature")
+def toggle_feature_listing(
+    listing_id: int,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    listing = db.query(Listing).filter(Listing.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
+    listing.is_featured = not listing.is_featured
+    db.commit()
+    return {"detail": f"Listing {'featured' if listing.is_featured else 'unfeatured'}"}
+
+# ==================== ADMIN AUCTION MANAGEMENT ROUTES ====================
+
+@app.put("/api/admin/auctions/{auction_id}/extend")
+def extend_auction(
+    auction_id: int,
+    hours: int = Query(..., ge=1, le=168),
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    auction = db.query(Auction).filter(Auction.id == auction_id).first()
+    if not auction:
+        raise HTTPException(status_code=404, detail="Auction not found")
+    
+    auction.end_time = auction.end_time + timedelta(hours=hours)
+    db.commit()
+    return {"detail": f"Auction extended by {hours} hours", "new_end_time": auction.end_time}
+
+@app.put("/api/admin/auctions/{auction_id}/cancel")
+def cancel_auction(
+    auction_id: int,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    auction = db.query(Auction).filter(Auction.id == auction_id).first()
+    if not auction:
+        raise HTTPException(status_code=404, detail="Auction not found")
+    
+    auction.status = AuctionStatus.CANCELLED
+    db.commit()
+    return {"detail": "Auction cancelled"}
+
+# ==================== CATEGORY MANAGEMENT ROUTES ====================
+
+@app.get("/api/categories", response_model=List[CategorySchema])
+def get_categories(
+    skip: int = 0,
+    limit: int = 100,
+    active_only: bool = True,
+    db: Session = Depends(get_db)
+):
+    query = db.query(Category)
+    if active_only:
+        query = query.filter(Category.is_active == True)
+    return query.order_by(Category.order).offset(skip).limit(limit).all()
+
+@app.get("/api/categories/{category_id}", response_model=CategorySchema)
+def get_category(category_id: int, db: Session = Depends(get_db)):
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return category
+
+@app.post("/api/admin/categories", response_model=CategorySchema)
+def create_category(
+    category: CategoryCreate,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    # Check if category name already exists
+    existing = db.query(Category).filter(Category.name == category.name).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Category already exists")
+    
+    db_category = Category(**category.dict())
+    db.add(db_category)
+    db.commit()
+    db.refresh(db_category)
+    return db_category
+
+@app.put("/api/admin/categories/{category_id}", response_model=CategorySchema)
+def update_category(
+    category_id: int,
+    category_update: CategoryUpdate,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    db_category = db.query(Category).filter(Category.id == category_id).first()
+    if not db_category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    for key, value in category_update.dict(exclude_unset=True).items():
+        setattr(db_category, key, value)
+    
+    db.commit()
+    db.refresh(db_category)
+    return db_category
+
+@app.delete("/api/admin/categories/{category_id}")
+def delete_category(
+    category_id: int,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    # Check if category has subcategories
+    subcategories = db.query(Category).filter(Category.parent_id == category_id).first()
+    if subcategories:
+        raise HTTPException(status_code=400, detail="Cannot delete category with subcategories")
+    
+    db.delete(category)
+    db.commit()
+    return {"detail": "Category deleted"}
+
+# ==================== ACTIVITY LOG ROUTES ====================
+
+@app.get("/api/admin/activities", response_model=List[ActivityLogSchema])
+def get_activity_logs(
+    skip: int = 0,
+    limit: int = 100,
+    user_id: Optional[int] = None,
+    action: Optional[str] = None,
+    suspicious_only: bool = False,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    query = db.query(ActivityLog)
+    
+    if user_id:
+        query = query.filter(ActivityLog.user_id == user_id)
+    if action:
+        query = query.filter(ActivityLog.action.contains(action))
+    if suspicious_only:
+        query = query.filter(ActivityLog.is_suspicious == True)
+    
+    return query.order_by(ActivityLog.created_at.desc()).offset(skip).limit(limit).all()
+
+@app.get("/api/admin/activities/{activity_id}", response_model=ActivityLogSchema)
+def get_activity_log_details(
+    activity_id: int,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    activity = db.query(ActivityLog).filter(ActivityLog.id == activity_id).first()
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity log not found")
+    return activity
+
+@app.put("/api/admin/activities/{activity_id}/flag")
+def flag_activity(
+    activity_id: int,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    activity = db.query(ActivityLog).filter(ActivityLog.id == activity_id).first()
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity log not found")
+    
+    activity.is_suspicious = True
+    db.commit()
+    return {"detail": "Activity flagged as suspicious"}
 
 # ==================== SOCKET.IO EVENTS ====================
 
