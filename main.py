@@ -8,6 +8,9 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 import socketio
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from database import get_db, init_db
 from models import (
@@ -1303,4 +1306,5 @@ async def admin_panel():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(socket_app, host="0.0.0.0", port=8000)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(socket_app, host="0.0.0.0", port=port)
