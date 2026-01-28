@@ -29,6 +29,16 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link text-white" href="#activities" onclick="showSection('activities')">
+                                <i class="fas fa-history"></i> Activity Log
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#categories" onclick="showSection('categories')">
+                                <i class="fas fa-tags"></i> Categories
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link text-white" href="#listings" onclick="showSection('listings')">
                                 <i class="fas fa-list"></i> Listings
                             </a>
@@ -36,6 +46,41 @@
                         <li class="nav-item">
                             <a class="nav-link text-white" href="#auctions" onclick="showSection('auctions')">
                                 <i class="fas fa-gavel"></i> Auctions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#comments" onclick="showSection('comments')">
+                                <i class="fas fa-comments"></i> Comments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#promotions" onclick="showSection('promotions')">
+                                <i class="fas fa-percent"></i> Promotions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#shipping" onclick="showSection('shipping')">
+                                <i class="fas fa-shipping-fast"></i> Shipping
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#settings" onclick="showSection('settings')">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#reports" onclick="showSection('reports')">
+                                <i class="fas fa-chart-bar"></i> Reports
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#audit" onclick="showSection('audit')">
+                                <i class="fas fa-clipboard-list"></i> Audit Logs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#support" onclick="showSection('support')">
+                                <i class="fas fa-life-ring"></i> Support
                             </a>
                         </li>
                         <li class="nav-item">
@@ -148,6 +193,12 @@
                     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                         <h1 class="h2">User Management</h1>
                         <div class="btn-toolbar mb-2 mb-md-0">
+                            <div class="input-group me-2">
+                                <input type="text" class="form-control" id="user-search" placeholder="Search users...">
+                                <button class="btn btn-outline-secondary" onclick="searchUsers()">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadUsers()">
                                 <i class="fas fa-sync"></i> Refresh
                             </button>
@@ -157,16 +208,99 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
+                                    <th><input type="checkbox" id="select-all-users" onclick="toggleSelectAll()"></th>
                                     <th>ID</th>
                                     <th>Username</th>
                                     <th>Email</th>
                                     <th>Role</th>
                                     <th>Status</th>
-                                    <th>Created</th>
+                                    <th>Registration Date</th>
+                                    <th>Last Login</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="users-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-warning" onclick="bulkBanUsers()">
+                            <i class="fas fa-ban"></i> Ban Selected
+                        </button>
+                        <button class="btn btn-success" onclick="bulkUnbanUsers()">
+                            <i class="fas fa-check"></i> Unban Selected
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Activity Log Section -->
+                <div id="activities-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Activity Log</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <div class="input-group me-2">
+                                <select class="form-select" id="activity-filter">
+                                    <option value="">All Activities</option>
+                                    <option value="Posted Listing">Posted Listing</option>
+                                    <option value="Bid Placed">Bid Placed</option>
+                                    <option value="Login">Login</option>
+                                    <option value="suspicious">Suspicious Only</option>
+                                </select>
+                                <button class="btn btn-outline-secondary" onclick="filterActivities()">
+                                    <i class="fas fa-filter"></i>
+                                </button>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadActivities()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Description</th>
+                                    <th>Timestamp</th>
+                                    <th>IP Address</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activities-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Category Management Section -->
+                <div id="categories-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Category Management</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-primary me-2" onclick="showAddCategoryModal()">
+                                <i class="fas fa-plus"></i> Add Category
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadCategories()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Parent Category</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Order</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categories-table-body">
                             </tbody>
                         </table>
                     </div>
@@ -188,11 +322,12 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Title</th>
-                                    <th>Price</th>
                                     <th>Category</th>
                                     <th>Seller ID</th>
+                                    <th>Price</th>
                                     <th>Status</th>
-                                    <th>Views</th>
+                                    <th>Type</th>
+                                    <th>Date Posted</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -217,11 +352,11 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Title</th>
-                                    <th>Current Price</th>
-                                    <th>Category</th>
-                                    <th>Status</th>
+                                    <th>Item</th>
+                                    <th>Current Bid</th>
+                                    <th>Highest Bidder</th>
                                     <th>End Time</th>
+                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -293,6 +428,217 @@
                     <div id="flagged-content-container">
                     </div>
                 </div>
+
+                <!-- Comments Section -->
+                <div id="comments-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Comments & Reviews Management</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadComments()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Listing</th>
+                                    <th>Comment</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comments-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Promotions Section -->
+                <div id="promotions-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Promotions & Ads</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-primary me-2" onclick="showAddPromotionModal()">
+                                <i class="fas fa-plus"></i> Add Promotion
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadPromotions()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Listing</th>
+                                    <th>Discount %</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="promotions-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Shipping Section -->
+                <div id="shipping-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Shipping & Logistics</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-primary me-2" onclick="showAddShippingModal()">
+                                <i class="fas fa-plus"></i> Add Method
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadShippingMethods()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Base Cost</th>
+                                    <th>Estimated Days</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="shipping-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="settings-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Site Configuration</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-primary me-2" onclick="showAddSettingModal()">
+                                <i class="fas fa-plus"></i> Add Setting
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadSettings()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Value</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="settings-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Reports Section -->
+                <div id="reports-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Reports & Analytics</h1>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Sales Report</h5>
+                                </div>
+                                <div class="card-body" id="sales-report">
+                                    <button class="btn btn-primary" onclick="loadSalesReport()">Generate Report</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>User Growth Report</h5>
+                                </div>
+                                <div class="card-body" id="user-report">
+                                    <button class="btn btn-primary" onclick="loadUserReport()">Generate Report</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit Logs Section -->
+                <div id="audit-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Audit Logs</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadAuditLogs()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Admin</th>
+                                    <th>Action</th>
+                                    <th>Target Type</th>
+                                    <th>Target ID</th>
+                                    <th>Details</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="audit-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Support Tickets Section -->
+                <div id="support-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Help & Support</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadSupportTickets()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Subject</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th>Assigned To</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="support-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </main>
         </div>
     </div>
@@ -313,6 +659,84 @@
                             <textarea class="form-control" id="resolution-text" name="resolution" rows="4" required></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Resolve Dispute</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Category Modal -->
+    <div class="modal fade" id="categoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="categoryModalTitle">Add Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="categoryForm">
+                        <input type="hidden" id="category-id" name="category_id">
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" id="category-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="category-description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Parent Category</label>
+                            <select class="form-select" id="category-parent">
+                                <option value="">None (Root Category)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Order</label>
+                            <input type="number" class="form-control" id="category-order" value="0" min="0">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="category-active" checked>
+                                <label class="form-check-label" for="category-active">Active</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Save Category</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View User Details Modal -->
+    <div class="modal fade" id="viewUserModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">User Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="user-details-content">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Extend Auction Modal -->
+    <div class="modal fade" id="extendAuctionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Extend Auction</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="extendAuctionForm">
+                        <input type="hidden" id="extend-auction-id">
+                        <div class="mb-3">
+                            <label class="form-label">Extend by (hours)</label>
+                            <input type="number" class="form-control" id="extend-hours" min="1" max="168" value="24" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Extend Auction</button>
                     </form>
                 </div>
             </div>
