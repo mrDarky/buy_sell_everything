@@ -25,6 +25,16 @@ body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
+.category-card {
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.category-card:hover {
+    border-color: #667eea;
+    transform: translateY(-8px);
+}
+
 .badge {
     font-size: 0.85rem;
     padding: 0.35em 0.65em;
@@ -44,7 +54,7 @@ body {
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-#listings-container, #auctions-container {
+#listings-container, #auctions-container, #featured-container {
     min-height: 300px;
 }
 
@@ -74,6 +84,50 @@ footer a:hover {
     text-decoration: underline;
 }
 
+/* Service-specific styling */
+.service-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+/* Countdown timer styling */
+.countdown-timer {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #dc3545;
+    padding: 10px;
+    background-color: #fff3cd;
+    border-radius: 5px;
+    text-align: center;
+    margin: 10px 0;
+}
+
+/* Bid history styling */
+.bid-history {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.bid-item {
+    padding: 10px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.bid-item:last-child {
+    border-bottom: none;
+}
+
+/* Review stars */
+.review-stars {
+    color: #ffc107;
+}
+
 /* Animation for stats */
 @keyframes fadeInUp {
     from {
@@ -88,4 +142,32 @@ footer a:hover {
 
 .card {
     animation: fadeInUp 0.5s ease;
+}
+
+/* Search bar enhancement */
+#hero-search {
+    border-top-left-radius: 25px;
+    border-bottom-left-radius: 25px;
+}
+
+.input-group-lg .btn {
+    border-top-right-radius: 25px;
+    border-bottom-right-radius: 25px;
+}
+
+/* Message thread styling */
+.message-thread {
+    border-left: 3px solid #667eea;
+    padding-left: 15px;
+    margin-bottom: 15px;
+}
+
+/* Notification dot */
+.notification-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #dc3545;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 5px;
 }

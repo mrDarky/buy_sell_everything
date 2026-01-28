@@ -48,6 +48,27 @@
         <div class="container">
             <h1 class="display-4 fw-bold">Buy & Sell Everything</h1>
             <p class="lead">Your trusted marketplace for buying and selling items, with live auctions and secure transactions</p>
+            
+            <!-- Search Bar -->
+            <div class="row justify-content-center mt-4 mb-4">
+                <div class="col-md-8">
+                    <div class="input-group input-group-lg">
+                        <input type="text" class="form-control" id="hero-search" placeholder="Search for items, services, or auctions...">
+                        <select class="form-select" id="hero-category" style="max-width: 200px;">
+                            <option value="">All Categories</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Furniture">Furniture</option>
+                            <option value="Clothing">Clothing</option>
+                            <option value="Services">Services</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <button class="btn btn-warning" type="button" onclick="searchListings()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             <div class="mt-4">
                 <button class="btn btn-light btn-lg me-2" data-bs-toggle="modal" data-bs-target="#createListingModal">
                     <i class="fas fa-plus"></i> Create Listing
@@ -83,17 +104,104 @@
         </div>
     </section>
 
+    <!-- Categories Grid Section -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-4">Browse by Category</h2>
+            <div class="row g-3">
+                <div class="col-md-3 col-sm-6">
+                    <div class="card h-100 text-center category-card" onclick="filterListings('Electronics')">
+                        <div class="card-body">
+                            <i class="fas fa-laptop fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Electronics</h5>
+                            <p class="card-text text-muted">Phones, Laptops, Gadgets</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card h-100 text-center category-card" onclick="filterListings('Furniture')">
+                        <div class="card-body">
+                            <i class="fas fa-couch fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Furniture</h5>
+                            <p class="card-text text-muted">Tables, Chairs, Decor</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card h-100 text-center category-card" onclick="filterListings('Clothing')">
+                        <div class="card-body">
+                            <i class="fas fa-tshirt fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Clothing</h5>
+                            <p class="card-text text-muted">Fashion & Accessories</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card h-100 text-center category-card" onclick="filterListings('Services')">
+                        <div class="card-body">
+                            <i class="fas fa-briefcase fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Services</h5>
+                            <p class="card-text text-muted">Freelance & Bookings</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured/Trending Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Featured & Trending</h2>
+            <div id="featured-container" class="row">
+                <!-- Featured listings will be loaded here -->
+            </div>
+        </div>
+    </section>
+
     <!-- Listings Section -->
     <section id="listings" class="py-5">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>Latest Listings</h2>
-                <div class="btn-group">
-                    <button class="btn btn-outline-primary" onclick="filterListings('all')">All</button>
-                    <button class="btn btn-outline-primary" onclick="filterListings('Electronics')">Electronics</button>
-                    <button class="btn btn-outline-primary" onclick="filterListings('Furniture')">Furniture</button>
-                    <button class="btn btn-outline-primary" onclick="filterListings('Clothing')">Clothing</button>
-                    <button class="btn btn-outline-primary" onclick="filterListings('Other')">Other</button>
+                <h2>Browse Listings</h2>
+                <div>
+                    <!-- Filters -->
+                    <div class="btn-group me-2">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><h6 class="dropdown-header">Price Range</h6></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterByPrice(0, 50)">Under $50</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterByPrice(50, 200)">$50 - $200</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterByPrice(200, 1000)">$200 - $1000</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterByPrice(1000, 999999)">Over $1000</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">Type</h6></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterByType('one-time')">Buy Once</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterByType('recurring')">Services</a></li>
+                        </ul>
+                    </div>
+                    <!-- Sorting -->
+                    <div class="btn-group me-2">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-sort"></i> Sort
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="sortListings('newest')">Newest First</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortListings('price-low')">Price: Low to High</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortListings('price-high')">Price: High to Low</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortListings('rating')">Highest Rated</a></li>
+                        </ul>
+                    </div>
+                    <!-- Category Buttons -->
+                    <div class="btn-group">
+                        <button class="btn btn-outline-primary active" onclick="filterListings('all')">All</button>
+                        <button class="btn btn-outline-primary" onclick="filterListings('Electronics')">Electronics</button>
+                        <button class="btn btn-outline-primary" onclick="filterListings('Furniture')">Furniture</button>
+                        <button class="btn btn-outline-primary" onclick="filterListings('Clothing')">Clothing</button>
+                        <button class="btn btn-outline-primary" onclick="filterListings('Services')">Services</button>
+                    </div>
                 </div>
             </div>
             <div id="listings-container" class="row">
@@ -140,14 +248,32 @@
                                     <label class="form-label">Password</label>
                                     <input type="password" class="form-control" name="password" required>
                                 </div>
+                                <div class="mb-3 text-end">
+                                    <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot Password?</a>
+                                </div>
                                 <button type="submit" class="btn btn-primary w-100">Login</button>
                             </form>
+                            
+                            <!-- Social Login -->
+                            <div class="mt-3">
+                                <hr class="my-3">
+                                <p class="text-center text-muted">Or continue with</p>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-danger" onclick="socialLogin('google')">
+                                        <i class="fab fa-google"></i> Continue with Google
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="socialLogin('facebook')">
+                                        <i class="fab fa-facebook"></i> Continue with Facebook
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div class="tab-pane fade" id="register">
                             <form id="registerForm">
                                 <div class="mb-3">
                                     <label class="form-label">Email</label>
                                     <input type="email" class="form-control" name="email" required>
+                                    <small class="text-muted">We'll send you a verification email</small>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Username</label>
@@ -166,7 +292,46 @@
                                 </div>
                                 <button type="submit" class="btn btn-primary w-100">Register</button>
                             </form>
+                            
+                            <!-- Social Registration -->
+                            <div class="mt-3">
+                                <hr class="my-3">
+                                <p class="text-center text-muted">Or sign up with</p>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-danger" onclick="socialLogin('google')">
+                                        <i class="fab fa-google"></i> Sign up with Google
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="socialLogin('facebook')">
+                                        <i class="fab fa-facebook"></i> Sign up with Facebook
+                                    </button>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reset Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="forgotPasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" name="email" required>
+                            <small class="text-muted">Enter your email to receive a password reset link</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Send Reset Link</button>
+                    </form>
+                    <div class="mt-3 text-center">
+                        <a href="#" class="text-decoration-none" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#loginModal">Back to Login</a>
                     </div>
                 </div>
             </div>
@@ -175,7 +340,7 @@
 
     <!-- Create Listing Modal -->
     <div class="modal fade" id="createListingModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Create New Listing</h5>
@@ -183,6 +348,21 @@
                 </div>
                 <div class="modal-body">
                     <form id="createListingForm">
+                        <!-- Listing Type Toggle -->
+                        <div class="mb-4 text-center">
+                            <div class="btn-group" role="group">
+                                <input type="radio" class="btn-check" name="listing_type" id="listing-type-onetime" value="one-time" checked>
+                                <label class="btn btn-outline-primary" for="listing-type-onetime">
+                                    <i class="fas fa-box"></i> Sell Once (Product)
+                                </label>
+                                
+                                <input type="radio" class="btn-check" name="listing_type" id="listing-type-recurring" value="recurring">
+                                <label class="btn btn-outline-primary" for="listing-type-recurring">
+                                    <i class="fas fa-calendar-alt"></i> Sell Multiple Times (Service)
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label">Title</label>
                             <input type="text" class="form-control" name="title" required>
@@ -191,19 +371,53 @@
                             <label class="form-label">Description</label>
                             <textarea class="form-control" name="description" rows="3" required></textarea>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Price ($)</label>
-                            <input type="number" class="form-control" name="price" step="0.01" required>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Price ($)</label>
+                                <input type="number" class="form-control" name="price" step="0.01" required>
+                                <small class="text-muted" id="price-hint">One-time purchase price</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" name="category" required>
+                                    <option value="Electronics">Electronics</option>
+                                    <option value="Furniture">Furniture</option>
+                                    <option value="Clothing">Clothing</option>
+                                    <option value="Services">Services</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Category</label>
-                            <select class="form-select" name="category" required>
-                                <option value="Electronics">Electronics</option>
-                                <option value="Furniture">Furniture</option>
-                                <option value="Clothing">Clothing</option>
-                                <option value="Other">Other</option>
-                            </select>
+                        
+                        <!-- Service-specific fields -->
+                        <div id="service-fields" style="display: none;">
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="fas fa-calendar"></i> Service Booking Settings</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Availability Calendar</label>
+                                        <input type="text" class="form-control" placeholder="Mon-Fri: 9 AM - 5 PM" name="availability">
+                                        <small class="text-muted">Specify your available hours</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Booking Duration (minutes)</label>
+                                        <select class="form-select" name="booking_duration">
+                                            <option value="30">30 minutes</option>
+                                            <option value="60">1 hour</option>
+                                            <option value="90">1.5 hours</option>
+                                            <option value="120">2 hours</option>
+                                            <option value="240">4 hours</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Advance Booking (days)</label>
+                                        <input type="number" class="form-control" name="advance_booking" value="1" min="0">
+                                        <small class="text-muted">Minimum days in advance for booking</small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label">Image URL</label>
                             <input type="url" class="form-control" name="image_url" placeholder="https://example.com/image.jpg">
@@ -293,13 +507,246 @@
                 <div class="modal-body" id="listing-detail-body">
                     <!-- Listing details will be loaded here -->
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="buy-now-btn">Buy Now</button>
+                <div class="modal-footer justify-content-between">
+                    <div>
+                        <button type="button" class="btn btn-outline-secondary" onclick="contactSeller()">
+                            <i class="fas fa-envelope"></i> Contact Seller
+                        </button>
+                        <button type="button" class="btn btn-outline-info" onclick="viewSellerProfile()">
+                            <i class="fas fa-user"></i> View Profile
+                        </button>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-success" id="buy-now-btn" onclick="buyNow()">
+                            <i class="fas fa-shopping-cart"></i> Buy Now
+                        </button>
+                        <button type="button" class="btn btn-primary" id="book-service-btn" style="display: none;" onclick="bookService()">
+                            <i class="fas fa-calendar-check"></i> Book Service
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Auction Detail Modal -->
+    <div class="modal fade" id="auctionDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="auction-detail-title"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="auction-detail-body">
+                    <!-- Auction details with countdown timer and bid history -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-warning" onclick="toggleAutoBid()">
+                        <i class="fas fa-robot"></i> Auto-Bid
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="addToWatchlist()">
+                        <i class="fas fa-star"></i> Add to Watchlist
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="placeBid()">
+                        <i class="fas fa-gavel"></i> Place Bid
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Dashboard Modal -->
+    <div class="modal fade" id="dashboardModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">My Dashboard</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs mb-3" id="dashboardTabs">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-active-listings">Active Listings</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-my-bids">My Bids</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-purchases">Purchase History</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-reviews">Reviews</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-settings">Settings</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="tab-active-listings">
+                            <div id="dashboard-listings-container"></div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-my-bids">
+                            <div id="dashboard-bids-container"></div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-purchases">
+                            <div id="dashboard-purchases-container"></div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-reviews">
+                            <div id="dashboard-reviews-container"></div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-settings">
+                            <div id="dashboard-settings-container">
+                                <h5>Profile Settings</h5>
+                                <form id="profileSettingsForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">Username</label>
+                                        <input type="text" class="form-control" name="username">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" name="email">
+                                    </div>
+                                    <h5 class="mt-4">Notification Preferences</h5>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="notify-messages" checked>
+                                        <label class="form-check-label" for="notify-messages">New Messages</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="notify-bids" checked>
+                                        <label class="form-check-label" for="notify-bids">New Bids on My Auctions</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="notify-purchases" checked>
+                                        <label class="form-check-label" for="notify-purchases">Purchase Updates</label>
+                                    </div>
+                                    <h5 class="mt-4">Payment Methods</h5>
+                                    <div class="list-group">
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <i class="fab fa-bitcoin text-warning"></i> <strong>TON Wallet</strong>
+                                                    <p class="mb-0 text-muted small">Not connected</p>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-primary">Connect</button>
+                                            </div>
+                                        </div>
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <i class="fas fa-dollar-sign text-success"></i> <strong>USDT Wallet</strong>
+                                                    <p class="mb-0 text-muted small">Not connected</p>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-primary">Connect</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+
+    <!-- Help & Support Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-4">Help & Support</h2>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-question-circle"></i> Frequently Asked Questions</h5>
+                            <div class="accordion" id="faqAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                            How do I create a listing?
+                                        </button>
+                                    </h2>
+                                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                        <div class="accordion-body">
+                                            Click the "Create Listing" button in the hero section or navigation menu. Fill in the required details including title, description, price, and category. You can choose between a one-time product sale or a recurring service.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                            How do auctions work?
+                                        </button>
+                                    </h2>
+                                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                        <div class="accordion-body">
+                                            Auctions allow sellers to list items with a starting price and end time. Buyers can place bids, and the highest bidder at the end wins. You can also set up auto-bidding to automatically bid up to your maximum amount.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                            What payment methods are accepted?
+                                        </button>
+                                    </h2>
+                                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                        <div class="accordion-body">
+                                            We currently support cryptocurrency payments including TON and USDT. Connect your wallet in the settings to start buying and selling.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                            How do I book a service?
+                                        </button>
+                                    </h2>
+                                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                        <div class="accordion-body">
+                                            Services are listings marked as "recurring". Click on the service, view the seller's availability, and click "Book Service" to select a time slot. The seller will receive your booking request.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-headset"></i> Contact Support</h5>
+                            <p>Can't find what you're looking for? Send us a message and we'll get back to you.</p>
+                            <form id="supportContactForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Subject</label>
+                                    <select class="form-select" name="subject" required>
+                                        <option value="">Select a topic...</option>
+                                        <option value="account">Account Issues</option>
+                                        <option value="payment">Payment Problems</option>
+                                        <option value="listing">Listing Questions</option>
+                                        <option value="dispute">Report a Dispute</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Message</label>
+                                    <textarea class="form-control" name="message" rows="4" required placeholder="Describe your issue..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-paper-plane"></i> Send Message
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Footer -->
     <footer class="bg-dark text-white py-4 mt-5">
