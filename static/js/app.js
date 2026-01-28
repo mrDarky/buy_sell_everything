@@ -3,6 +3,18 @@ const API_BASE = '/api';
 let currentUser = null;
 let socket = null;
 
+// HTML escape function to prevent XSS
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe
+        .toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 // Initialize app on page load
 document.addEventListener('DOMContentLoaded', function() {
     checkAuth();
@@ -358,7 +370,8 @@ async function handleCreateListing(e) {
         description: formData.get('description'),
         price: parseFloat(formData.get('price')),
         category: formData.get('category'),
-        image_url: formData.get('image_url') || null
+        image_url: formData.get('image_url') || null,
+        listing_type: formData.get('listing_type') || 'one-time'
     };
     
     try {
@@ -493,7 +506,7 @@ function showTransactions() {
 // Load dashboard data
 async function loadDashboardData() {
     const token = localStorage.getItem('access_token');
-    if (!token) return;
+    if (!token || !currentUser) return;
     
     try {
         // Load user's listings
@@ -541,11 +554,11 @@ function displayDashboardListings(listings) {
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-8">
-                        <h5>${listing.title}</h5>
-                        <p class="text-muted mb-2">${listing.description.substring(0, 100)}...</p>
-                        <span class="badge bg-primary">${listing.category}</span>
-                        <span class="badge bg-success">$${listing.price}</span>
-                        <span class="badge bg-info">${listing.views} views</span>
+                        <h5>${escapeHtml(listing.title)}</h5>
+                        <p class="text-muted mb-2">${escapeHtml(listing.description.substring(0, 100))}...</p>
+                        <span class="badge bg-primary">${escapeHtml(listing.category)}</span>
+                        <span class="badge bg-success">$${escapeHtml(listing.price)}</span>
+                        <span class="badge bg-info">${escapeHtml(listing.views)} views</span>
                     </div>
                     <div class="col-md-4 text-end">
                         <button class="btn btn-sm btn-outline-primary" onclick="editListing(${listing.id})">Edit</button>
@@ -570,10 +583,10 @@ function displayDashboardPurchases(transactions) {
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-8">
-                        <h6>Order #${tx.id}</h6>
-                        <p class="mb-0">Amount: $${tx.amount}</p>
-                        <p class="mb-0">Status: <span class="badge bg-${tx.status === 'completed' ? 'success' : 'warning'}">${tx.status}</span></p>
-                        <small class="text-muted">${new Date(tx.created_at).toLocaleDateString()}</small>
+                        <h6>Order #${escapeHtml(tx.id)}</h6>
+                        <p class="mb-0">Amount: $${escapeHtml(tx.amount)}</p>
+                        <p class="mb-0">Status: <span class="badge bg-${tx.status === 'completed' ? 'success' : 'warning'}">${escapeHtml(tx.status)}</span></p>
+                        <small class="text-muted">${escapeHtml(new Date(tx.created_at).toLocaleDateString())}</small>
                     </div>
                     <div class="col-md-4 text-end">
                         ${tx.status === 'completed' ? '<button class="btn btn-sm btn-outline-primary" onclick="leaveReview(' + tx.id + ')">Leave Review</button>' : ''}
@@ -596,8 +609,8 @@ function displayDashboardReviews(reviews) {
         <div class="card mb-3">
             <div class="card-body">
                 <div class="review-stars">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</div>
-                <p class="mb-2">${review.comment || 'No comment'}</p>
-                <small class="text-muted">${new Date(review.created_at).toLocaleDateString()}</small>
+                <p class="mb-2">${escapeHtml(review.comment) || 'No comment'}</p>
+                <small class="text-muted">${escapeHtml(new Date(review.created_at).toLocaleDateString())}</small>
             </div>
         </div>
     `).join('');
@@ -739,12 +752,12 @@ function displayFeaturedListings(listings) {
     container.innerHTML = listings.slice(0, 4).map(listing => `
         <div class="col-md-3 mb-3">
             <div class="card h-100">
-                ${listing.image_url ? `<img src="${listing.image_url}" class="card-img-top" alt="${listing.title}">` : ''}
+                ${listing.image_url ? `<img src="${escapeHtml(listing.image_url)}" class="card-img-top" alt="${escapeHtml(listing.title)}">` : ''}
                 <span class="badge bg-warning position-absolute top-0 end-0 m-2">Featured</span>
                 <div class="card-body">
-                    <h5 class="card-title">${listing.title}</h5>
-                    <p class="card-text">${listing.description.substring(0, 80)}...</p>
-                    <p class="card-text"><strong>$${listing.price}</strong></p>
+                    <h5 class="card-title">${escapeHtml(listing.title)}</h5>
+                    <p class="card-text">${escapeHtml(listing.description.substring(0, 80))}...</p>
+                    <p class="card-text"><strong>$${escapeHtml(listing.price)}</strong></p>
                     <button class="btn btn-primary btn-sm w-100" onclick="viewListing(${listing.id})">View Details</button>
                 </div>
             </div>
