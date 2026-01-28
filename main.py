@@ -8,6 +8,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 import socketio
 import os
+from dotenv import load_dotenv
 
 from database import get_db, init_db
 from models import (
@@ -36,6 +37,9 @@ from schemas import (
     DashboardMetrics
 )
 from auth import verify_password, get_password_hash, create_access_token, decode_access_token
+
+# Load environment variables
+load_dotenv()
 
 # Initialize FastAPI
 app = FastAPI(title="Buy & Sell Everything", version="1.0.0")
@@ -1303,4 +1307,9 @@ async def admin_panel():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(socket_app, host="0.0.0.0", port=8000)
+    try:
+        port = int(os.getenv("PORT", 8000))
+    except ValueError:
+        print("Warning: Invalid PORT value in environment, using default port 8000")
+        port = 8000
+    uvicorn.run(socket_app, host="0.0.0.0", port=port)
