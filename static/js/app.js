@@ -83,6 +83,11 @@ function updateUIForLoggedInUser() {
     document.getElementById('auth-link').style.display = 'none';
     document.getElementById('user-menu').style.display = 'block';
     document.getElementById('username-display').textContent = currentUser.username;
+    // Show messages link only when logged in
+    const messagesLink = document.getElementById('messages-link');
+    if (messagesLink) {
+        messagesLink.style.display = 'block';
+    }
     updateUnreadCount();
 }
 

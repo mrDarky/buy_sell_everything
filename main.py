@@ -1301,8 +1301,18 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 async def read_root():
     return FileResponse("templates/index.html")
 
+@app.get("/listings", response_class=HTMLResponse)
+async def listings_page():
+    return FileResponse("templates/listings.html")
+
+@app.get("/auctions", response_class=HTMLResponse)
+async def auctions_page():
+    return FileResponse("templates/auctions.html")
+
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_panel():
+    # Return admin HTML with client-side auth check
+    # The admin.js will handle authentication and redirection
     return FileResponse("templates/admin.html")
 
 if __name__ == "__main__":
