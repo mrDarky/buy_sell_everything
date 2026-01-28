@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Auctions - Buy & Sell Everything</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .filter-panel {
+            position: sticky;
+            top: 80px;
+            height: fit-content;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+        .filter-section {
+            border-bottom: 1px solid #dee2e6;
+            padding: 15px 0;
+        }
+        .filter-section:last-child {
+            border-bottom: none;
+        }
+        .filter-section h6 {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .auction-timer {
+            font-weight: bold;
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/"><i class="fas fa-shopping-cart"></i> Buy & Sell Everything</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/listings">Listings</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/auctions">Auctions</a></li>
+                    <li class="nav-item" id="messages-link" style="display: none;"><a class="nav-link" href="/#messages" data-bs-toggle="modal" data-bs-target="#messagesModal">Messages <span class="badge bg-danger" id="unread-count">0</span></a></li>
+                    <li class="nav-item" id="auth-link">
+                        <a class="nav-link" href="/" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a>
+                    </li>
+                    <li class="nav-item" id="user-menu" style="display: none;">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user"></i> <span id="username-display"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/#profile" onclick="showProfile()">Profile</a></li>
+                                <li><a class="dropdown-item" href="/#my-listings" onclick="showMyListings()">My Listings</a></li>
+                                <li><a class="dropdown-item" href="/#transactions" onclick="showTransactions()">Transactions</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" onclick="logout()">Logout</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="bg-light py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <h2><i class="fas fa-gavel"></i> Live Auctions</h2>
+                    <p class="text-muted">Bid on exciting items and win great deals</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Auctions with Filters -->
+    <section class="py-4">
+        <div class="container">
+            <div class="row">
+                <!-- Filter Panel (Right Side) -->
+                <div class="col-md-3 order-md-2">
+                    <div class="card filter-panel">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">
+                                <i class="fas fa-filter"></i> Filters
+                            </h5>
+                            
+                            <!-- Search -->
+                            <div class="filter-section">
+                                <h6>Search</h6>
+                                <input type="text" class="form-control" id="filter-search" placeholder="Search auctions...">
+                            </div>
+
+                            <!-- Category Filter -->
+                            <div class="filter-section">
+                                <h6>Category</h6>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="category" id="cat-all" value="" checked>
+                                    <label class="form-check-label" for="cat-all">All Categories</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="category" id="cat-electronics" value="Electronics">
+                                    <label class="form-check-label" for="cat-electronics">Electronics</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="category" id="cat-furniture" value="Furniture">
+                                    <label class="form-check-label" for="cat-furniture">Furniture</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="category" id="cat-clothing" value="Clothing">
+                                    <label class="form-check-label" for="cat-clothing">Clothing</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="category" id="cat-services" value="Services">
+                                    <label class="form-check-label" for="cat-services">Services</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="category" id="cat-other" value="Other">
+                                    <label class="form-check-label" for="cat-other">Other</label>
+                                </div>
+                            </div>
+
+                            <!-- Current Price Range Filter -->
+                            <div class="filter-section">
+                                <h6>Current Bid</h6>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="price" id="price-all" value="" checked>
+                                    <label class="form-check-label" for="price-all">Any Price</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="price" id="price-under-50" value="0-50">
+                                    <label class="form-check-label" for="price-under-50">Under $50</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="price" id="price-50-200" value="50-200">
+                                    <label class="form-check-label" for="price-50-200">$50 - $200</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="price" id="price-200-1000" value="200-1000">
+                                    <label class="form-check-label" for="price-200-1000">$200 - $1,000</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="price" id="price-over-1000" value="1000-999999">
+                                    <label class="form-check-label" for="price-over-1000">Over $1,000</label>
+                                </div>
+                            </div>
+
+                            <!-- Status Filter -->
+                            <div class="filter-section">
+                                <h6>Status</h6>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="status-all" value="" checked>
+                                    <label class="form-check-label" for="status-all">All</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="status-active" value="active">
+                                    <label class="form-check-label" for="status-active">Active</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="status-ending" value="ending">
+                                    <label class="form-check-label" for="status-ending">Ending Soon</label>
+                                </div>
+                            </div>
+
+                            <!-- Sort Options -->
+                            <div class="filter-section">
+                                <h6>Sort By</h6>
+                                <select class="form-select" id="sort-by">
+                                    <option value="ending-soon">Ending Soon</option>
+                                    <option value="newest">Newest First</option>
+                                    <option value="price-low">Price: Low to High</option>
+                                    <option value="price-high">Price: High to Low</option>
+                                    <option value="most-bids">Most Bids</option>
+                                </select>
+                            </div>
+
+                            <!-- Apply/Reset Buttons -->
+                            <div class="mt-3">
+                                <button class="btn btn-primary w-100 mb-2" onclick="applyFilters()">
+                                    <i class="fas fa-check"></i> Apply Filters
+                                </button>
+                                <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                                    <i class="fas fa-redo"></i> Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Auctions Grid -->
+                <div class="col-md-9 order-md-1">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <span id="results-count">0</span> auctions found
+                        </div>
+                        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#createAuctionModal">
+                            <i class="fas fa-plus"></i> Start Auction
+                        </button>
+                    </div>
+                    <div id="auctions-container" class="row">
+                        <!-- Auctions will be loaded here -->
+                        <div class="col-12 text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p>&copy; 2026 Buy & Sell Everything. All rights reserved.</p>
+            <p>
+                <a href="/admin" class="text-white">Admin Panel</a> | 
+                <a href="#" class="text-white">Terms</a> | 
+                <a href="#" class="text-white">Privacy</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="/static/js/app.js"></script>
+    <script>
+        // Define API_BASE locally if not already defined
+        const API_BASE = window.API_BASE || '/api';
+        
+        // HTML escape function to prevent XSS
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+        
+        let socket = null;
+        
+        // Page-specific JavaScript for auctions page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if checkAuth is available from app.js
+            if (typeof checkAuth === 'function') {
+                checkAuth();
+            }
+            applyFilters();
+
+            // Initialize Socket.IO for real-time updates if available
+            if (typeof io !== 'undefined') {
+                initSocket();
+            }
+
+            // Setup filter listeners
+            document.getElementById('filter-search').addEventListener('input', debounce(applyFilters, 500));
+            document.querySelectorAll('input[name="category"]').forEach(input => {
+                input.addEventListener('change', applyFilters);
+            });
+            document.querySelectorAll('input[name="price"]').forEach(input => {
+                input.addEventListener('change', applyFilters);
+            });
+            document.querySelectorAll('input[name="status"]').forEach(input => {
+                input.addEventListener('change', applyFilters);
+            });
+            document.getElementById('sort-by').addEventListener('change', applyFilters);
+
+            // Update timers every second
+            setInterval(updateTimers, 1000);
+        });
+
+        function initSocket() {
+            try {
+                socket = io();
+                socket.on('connect', () => {
+                    console.log('Connected to Socket.IO');
+                });
+                socket.on('new_bid', (data) => {
+                    console.log('New bid received:', data);
+                    applyFilters(); // Refresh auctions on new bid
+                });
+            } catch (error) {
+                console.error('Error initializing Socket.IO:', error);
+            }
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        async function applyFilters() {
+            const search = document.getElementById('filter-search').value;
+            const category = document.querySelector('input[name="category"]:checked').value;
+            const priceRange = document.querySelector('input[name="price"]:checked').value;
+            const status = document.querySelector('input[name="status"]:checked').value;
+            const sortBy = document.getElementById('sort-by').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/auctions`);
+                if (response.ok) {
+                    let auctions = await response.json();
+
+                    // Apply filters
+                    if (search) {
+                        auctions = auctions.filter(a => 
+                            a.title.toLowerCase().includes(search.toLowerCase()) ||
+                            a.description.toLowerCase().includes(search.toLowerCase())
+                        );
+                    }
+                    if (category) {
+                        auctions = auctions.filter(a => a.category === category);
+                    }
+                    if (priceRange) {
+                        const [min, max] = priceRange.split('-').map(Number);
+                        auctions = auctions.filter(a => a.current_price >= min && a.current_price <= max);
+                    }
+                    if (status === 'active') {
+                        auctions = auctions.filter(a => a.status === 'active');
+                    } else if (status === 'ending') {
+                        // Filter for auctions ending in next 24 hours
+                        const now = new Date();
+                        const oneDayLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+                        auctions = auctions.filter(a => {
+                            const endTime = new Date(a.end_time);
+                            return a.status === 'active' && endTime <= oneDayLater;
+                        });
+                    }
+
+                    // Apply sorting
+                    switch(sortBy) {
+                        case 'ending-soon':
+                            auctions.sort((a, b) => new Date(a.end_time) - new Date(b.end_time));
+                            break;
+                        case 'newest':
+                            auctions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                            break;
+                        case 'price-low':
+                            auctions.sort((a, b) => a.current_price - b.current_price);
+                            break;
+                        case 'price-high':
+                            auctions.sort((a, b) => b.current_price - a.current_price);
+                            break;
+                        case 'most-bids':
+                            // Would require bid count data
+                            break;
+                    }
+
+                    displayAuctions(auctions);
+                } else {
+                    console.error('Error fetching auctions:', response.status, response.statusText);
+                    const container = document.getElementById('auctions-container');
+                    container.innerHTML = `
+                        <div class="col-12 text-center py-5">
+                            <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                            <p class="text-muted">Failed to load auctions. Please try again later.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error fetching auctions:', error);
+                const container = document.getElementById('auctions-container');
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                        <p class="text-muted">Failed to load auctions. Please check your connection and try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayAuctions(auctions) {
+            const container = document.getElementById('auctions-container');
+            document.getElementById('results-count').textContent = auctions.length;
+
+            if (auctions.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No auctions found matching your criteria.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = auctions.map(auction => {
+                const timeRemaining = getTimeRemaining(auction.end_time);
+                const statusBadge = auction.status === 'active' ? 
+                    '<span class="badge bg-success">Active</span>' : 
+                    '<span class="badge bg-secondary">Ended</span>';
+                
+                return `
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="position-absolute top-0 end-0 m-2">${statusBadge}</div>
+                            <img src="${escapeHtml(auction.image_url) || 'https://via.placeholder.com/300x200'}" class="card-img-top" alt="${escapeHtml(auction.title)}">
+                            <div class="card-body">
+                                <h5 class="card-title">${escapeHtml(auction.title)}</h5>
+                                <p class="card-text text-truncate">${escapeHtml(auction.description)}</p>
+                                <p class="text-muted"><small><i class="fas fa-tag"></i> ${escapeHtml(auction.category)}</small></p>
+                                <div class="mb-2">
+                                    <small class="text-muted">Current Bid</small>
+                                    <h4 class="text-success mb-0">$${auction.current_price.toFixed(2)}</h4>
+                                </div>
+                                <div class="mb-3">
+                                    <small class="text-muted"><i class="fas fa-clock"></i> Time Remaining</small>
+                                    <div class="auction-timer" data-end-time="${auction.end_time}">${timeRemaining}</div>
+                                </div>
+                                <button class="btn btn-primary w-100" onclick="viewAuction(${auction.id})">
+                                    <i class="fas fa-gavel"></i> View & Bid
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getTimeRemaining(endTime) {
+            const now = new Date();
+            const end = new Date(endTime);
+            const diff = end - now;
+
+            if (diff <= 0) {
+                return 'Auction Ended';
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            if (days > 0) {
+                return `${days}d ${hours}h ${minutes}m`;
+            } else if (hours > 0) {
+                return `${hours}h ${minutes}m ${seconds}s`;
+            } else {
+                return `${minutes}m ${seconds}s`;
+            }
+        }
+
+        function updateTimers() {
+            document.querySelectorAll('.auction-timer').forEach(timer => {
+                const endTime = timer.getAttribute('data-end-time');
+                timer.textContent = getTimeRemaining(endTime);
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-search').value = '';
+            document.getElementById('cat-all').checked = true;
+            document.getElementById('price-all').checked = true;
+            document.getElementById('status-all').checked = true;
+            document.getElementById('sort-by').value = 'ending-soon';
+            applyFilters();
+        }
+
+        function viewAuction(id) {
+            window.location.href = `/#auction-${id}`;
+        }
+    </script>
+</body>
+</html>
